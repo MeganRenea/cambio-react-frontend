@@ -5,9 +5,107 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: black
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
+}
+
+.app {
+display: grid;
+grid-template-columns: repeat(8, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr);
+grid-auto-rows: minmax(100px, auto);
+align-items: center;
+grid-template-areas: 
+    ". . . p3a p3b . . ."
+    ". . . p3c p3d . . ."
+    ". . . . . . . ."
+    ". . . . btn . . ."
+    "p2b p2d . . De . p4c p4a"
+    "p2a p2c . Di . . p4d p4b"
+    ". . . log log . . ."
+    ". . . log log . . ."
+    ". . . p1d p1c . . ."
+    ". . . p1b p1a . . .";
+}
+
+button {
+  grid-area: btn;
+  width: 60%
+}
+
+.p4d {
+  grid-area: p4d
+}
+.p1a {
+ grid-area: p1a
+ 
+}
+.p1b{
+grid-area: p1b
+}
+.p1c{
+  grid-area: p1c
+}
+.p1d{
+  grid-area:p1d
+}
+.p2a{
+  grid-area:p2a;
+  transform: rotate(90deg)
+}
+.p2b{
+  grid-area:p2b;
+  transform: rotate(90deg)
+}
+.p2c{
+  grid-area: p2c;
+  transform: rotate(90deg)
+}
+.p2d{
+  grid-area: p2d;
+  transform: rotate(90deg)
+}
+.p3a{
+  grid-area: p3a
+}
+.p3b{
+  grid-area: p3b
+}
+.p3c{
+  grid-area: p3c
+}
+.p3d{
+  grid-area: p3d
+}
+.p4a{
+  grid-area: p4a;
+  transform: rotate(90deg)
+}
+.p4b{
+  grid-area: p4b;
+  transform: rotate(90deg)
+}
+.p4c{
+  grid-area: p4c;
+  transform: rotate(90deg)
+}
+.p4d{
+  grid-area: p4d;
+  transform: rotate(90deg)
+}
+
+img {
+  height: 60%;
+  width: 60%
+}
+
+.deck {
+  grid-area: De
+}
+
+.discard {
+  grid-area: Di
 }
