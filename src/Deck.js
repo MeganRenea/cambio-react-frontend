@@ -1,8 +1,20 @@
-import React from "react"
+import React from "react";
 
-export default class Deck extends React.Component{
-    render(){
-        
-        return (<div  className="deck"><img onClick={this.props.playing ? ()=> this.props.drawDeck(): null} src={ this.props.currentCard && this.props.currentCard.value !== "JOKER" ? this.props.currentCard.image : this.props.currentCard && this.props.currentCard.value === "JOKER" ? this.props.joker : this.props.cardBack}/></div>)
-    }
+export default class Deck extends React.Component {
+  render() {
+    return (
+      <div id="deck">
+        <img
+          onClick={this.props.playing ? () => this.props.drawDeck() : null}
+          src={
+            this.props.deckCard && this.props.deckCard.value !== "JOKER"
+              ? this.props.deckCard.image
+              : this.props.deckCard && this.props.deckCard.value === "JOKER"
+              ? this.props.joker
+              : this.props.cardBack
+          }
+        />
+      </div>
+    );
+  }
 }
