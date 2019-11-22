@@ -6,6 +6,8 @@ import cardBack from "./cardBack.png";
 import joker from "./joker.png";
 import Deck from "./Deck";
 import Discard from "./Discard";
+import TurnLabel from "./TurnLabel";
+import Computer from "./Computer";
 
 class App extends React.Component {
   state = {
@@ -45,11 +47,16 @@ class App extends React.Component {
     selectedCardA: null,
     selectedCardB: null,
     topDiscard: null,
-    currentTurn: 1,
+    currentTurn: null,
     secondCard: false,
     remaining: null,
-    power: null
+    power: null,
+    computer2played: false,
+    computer3played: false,
+    computer4played: false
   };
+
+  turn = false;
 
   drawDeck = () => {
     fetch(
@@ -59,6 +66,123 @@ class App extends React.Component {
       .then(json =>
         this.setState({ deckCard: json.cards[0], secondCard: false })
       );
+  };
+
+  computerPlay = () => {
+    let computerKnows;
+    let computer;
+    let played;
+    let nextTurn = this.state.currentTurn + 1;
+    if (nextTurn > 4) {
+      nextTurn = 1;
+    }
+    if (this.state.currentTurn === 1) {
+      return;
+    }
+    if (this.state.currentTurn === 2) {
+      computerKnows = this.state.p2;
+      computer = "p2";
+      played = "computer2played";
+    } else if (this.state.currentTurn === 3) {
+      computerKnows = this.state.p3;
+      computer = "p3";
+      played = "computer3played";
+    } else if (this.state.currentTurn === 4) {
+      computerKnows = this.state.p4;
+      computer = "p4";
+      played = "computer4played";
+    }
+
+    if (Object.values(computerKnows).includes(null) && !this.state[played]) {
+      console.log(`${computer} is going`);
+      Promise.resolve(
+        fetch(
+          `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/draw/?count=1`
+        )
+          .then(resp => resp.json())
+          .then(json => {
+            console.log(`${computer} is drawing`);
+            this.setState({
+              deckCard: json.cards[0],
+              secondCard: false,
+              remaining: json.remaining
+            });
+          })
+      ).then(() => {
+        setTimeout(() => {
+          console.log(`in ${computer}'s turn`);
+          let newPosition = Object.keys(computerKnows).find(
+            key => computerKnows[key] === null
+          );
+          let card = this.state.cards[newPosition];
+          fetch(
+            `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
+          )
+            .then(resp => resp.json())
+            .then(json => this.setState({ remaining: json.remaining }));
+
+          this.setState({
+            currentTurn: nextTurn,
+            [played]: true,
+            topDiscard: card,
+            playedCard: card,
+            deckCard: null,
+            cards: Object.assign(this.state.cards, {
+              [newPosition]: this.state.deckCard
+            }),
+            [computer]: Object.assign(this.state[computer], {
+              [newPosition]: this.state.deckCard
+            })
+          });
+        }, 5000);
+      });
+    }
+  };
+
+  computerHit = () => {
+    let computerKnows = [
+      { p2: this.state.p2 },
+      { p3: this.state.p3 },
+      { p4: this.state.p4 }
+    ];
+    if (this.state.topDiscard && !this.state.secondCard) {
+      computerKnows.forEach(computer => {
+        setTimeout(() => {
+          let player = Object.keys(computer)[0];
+          let cards = Object.values(computer)[0];
+          console.log("cards", cards);
+
+          let matchingCard = Object.values(cards).find(
+            card => card && card.value === this.state.topDiscard.value
+          );
+          let position = Object.keys(cards).find(
+            key => cards[key] === matchingCard
+          );
+          if (matchingCard) {
+            delete cards[position];
+            fetch(
+              `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${matchingCard.code}`
+            );
+            this.setState(prevState => ({
+              secondCard: true,
+              cards: Object.assign(prevState.cards, { [position]: null }),
+              topDiscard: matchingCard,
+              [player]: cards,
+              selectedCardA: null
+            }));
+          }
+        });
+      }, 2000);
+    }
+  };
+
+  resetPlay = () => {
+    this.setState({
+      computer2played: false,
+      computer3played: false,
+      computer4played: false,
+      deckCard: null
+    });
   };
 
   blindSwap = (event, card, position) => {
@@ -83,8 +207,10 @@ class App extends React.Component {
         }),
         selectedCardA: null,
         selectedCardB: null,
-        power: null
+        power: null,
+        currentTurn: prevState.currentTurn + 1
       }));
+
       Array.from(document.querySelectorAll(".Selected")).map(
         item => (item.className = "Not")
       );
@@ -114,8 +240,10 @@ class App extends React.Component {
         }),
         selectedCardA: null,
         selectedCardB: null,
-        power: null
+        power: null,
+        currentTurn: prevState.currentTurn + 1
       }));
+
       Array.from(document.querySelectorAll(".Selected")).map(
         item => (item.className = "Not")
       );
@@ -140,6 +268,7 @@ class App extends React.Component {
         selectedCardA: null,
         playedCard: card,
         deckCard: null,
+        currentTurn: prevState.currentTurn + 1,
         cards: Object.assign(prevState.cards, {
           [position]: prevState.deckCard
         })
@@ -180,7 +309,11 @@ class App extends React.Component {
       event.persist();
       setTimeout(() => {
         event.target.className = "Not";
-        this.setState({ selectedCardA: null, power: null });
+        this.setState({
+          selectedCardA: null,
+          power: null,
+          currentTurn: this.state.currentTurn + 1
+        });
       }, 5000);
     }
   };
@@ -197,12 +330,20 @@ class App extends React.Component {
       event.persist();
       setTimeout(() => {
         event.target.className = "Not";
-        this.setState({ selectedCardA: null, power: null });
+        this.setState({
+          selectedCardA: null,
+          power: null,
+          currentTurn: this.state.currentTurn + 1
+        });
       }, 5000);
     }
   };
 
   discardCard = () => {
+    let turn = this.state.currentTurn + 1;
+    if (turn === 5) {
+      turn = 1;
+    }
     if (this.state.deckCard) {
       fetch(
         `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${this.state.deckCard.code}`
@@ -229,7 +370,7 @@ class App extends React.Component {
       ) {
         this.setState({ power: "lookOther" });
       } else {
-        this.setState({ power: null });
+        this.setState({ power: null, currentTurn: turn });
       }
 
       this.setState(prevState => ({
@@ -284,7 +425,7 @@ class App extends React.Component {
     )
       .then(resp => resp.json())
       .then(json => {
-        this.setState({ playing: true });
+        this.setState({ playing: true, currentTurn: 1 });
         this.dealCards();
       });
   };
@@ -320,6 +461,19 @@ class App extends React.Component {
       <div className="app">
         {!this.state.playing ? <button onClick={this.play}>Play</button> : null}
         {this.state.playing ? this.renderCards() : null}
+        <TurnLabel turn={this.state.currentTurn} />
+        <Computer
+          computerPlay={this.computerPlay}
+          turn={this.state.currentTurn}
+          computer2played={this.state.computer2played}
+          computer3played={this.state.computer3played}
+          computer4played={this.state.computer4played}
+          deckCard={this.state.deckCard}
+          resetPlay={this.resetPlay}
+          computerHit={this.computerHit}
+          secondCard={this.state.secondCard}
+          topDiscard={this.state.topDiscard}
+        />
         <Deck
           cardBack={cardBack}
           playing={this.state.playing}

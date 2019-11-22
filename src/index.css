@@ -5,7 +5,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: black
+  background-color: black;
 }
 
 code {
@@ -14,101 +14,136 @@ code {
 }
 
 .app {
-display: grid;
+  display: grid;
 
-grid-template-columns: repeat(8, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr);
-grid-auto-rows: minmax(100px, auto);
-align-items: center;
-grid-template-areas: 
-    ". . . p3a p3b . . ."
-    ". . . p3c p3d . . ."
-    ". . . . . . . ."
-    ". . . . btn . . ."
-    "p2b p2d . . De . p4c p4a"
-    "p2a p2c . Di . . p4d p4b"
-    ". . . log log . . ."
-    ". . . log log . . ."
-    ". . . p1d p1c . . ."
-    ". . . p1b p1a . . .";
+  grid-template-columns: repeat(
+    10,
+    1fr,
+    1fr,
+    1fr,
+    1fr,
+    0.25fr,
+    0.25fr,
+    1fr,
+    1fr,
+    1fr,
+    1fr
+  );
+  grid-auto-rows: minmax(auto, auto);
+  height: 100vh;
+  width: 100vw;
+  align-items: center;
+  grid-template-areas:
+    ". . . . p3 p3 . . . ."
+    ". . . . p3a p3b . . . ."
+    ". . . . . . . . . ."
+    ". . . . p3c p3d . . . ."
+    ". . . . . . . . . ."
+    ". . . . . btn . . . ."
+    "p2 p2b p2d . . De . p4c p4a p4"
+    "p2 p2a p2c . Di . . p4d p4b p4"
+    ". . . . log log . . . ."
+    ". . . . log log . . . ."
+    ". . . . p1d p1c . . . ."
+    ". . . . . . . . . ."
+    ". . . . p1b p1a . . . ."
+    ". . . . p1 p1 . . . .";
 }
 
 button {
   grid-area: btn;
-  width: 60%
+  width: 35%;
+}
+#player1 {
+  grid-area: p1;
+  color: white;
+}
+#player2 {
+  grid-area: p2;
+  transform: rotate(-90deg);
+  color: white;
+}
+#player3 {
+  grid-area: p3;
+  color: white;
+}
+#player4 {
+  grid-area: p4;
+  transform: rotate(90deg);
+  color: white;
 }
 
 #p4d {
-  grid-area: p4d
+  grid-area: p4d;
 }
 #p1a {
- grid-area: p1a
- 
+  grid-area: p1a;
 }
-#p1b{
-grid-area: p1b
+#p1b {
+  grid-area: p1b;
 }
-#p1c{
-  grid-area: p1c
+#p1c {
+  grid-area: p1c;
 }
-#p1d{
-  grid-area:p1d
+#p1d {
+  grid-area: p1d;
 }
-#p2a{
-  grid-area:p2a;
-  transform: rotate(90deg)
+#p2a {
+  grid-area: p2a;
+  transform: rotate(90deg);
 }
-#p2b{
-  grid-area:p2b;
-  transform: rotate(90deg)
+#p2b {
+  grid-area: p2b;
+  transform: rotate(90deg);
 }
-#p2c{
+#p2c {
   grid-area: p2c;
-  transform: rotate(90deg)
+  transform: rotate(90deg);
 }
-#p2d{
+#p2d {
   grid-area: p2d;
-  transform: rotate(90deg)
+  transform: rotate(90deg);
 }
-#p3a{
-  grid-area: p3a
+#p3a {
+  grid-area: p3a;
 }
-#p3b{
-  grid-area: p3b
+#p3b {
+  grid-area: p3b;
 }
-#p3c{
-  grid-area: p3c
+#p3c {
+  grid-area: p3c;
 }
-#p3d{
-  grid-area: p3d
+#p3d {
+  grid-area: p3d;
 }
-#p4a{
+#p4a {
   grid-area: p4a;
-  transform: rotate(90deg)
+  transform: rotate(90deg);
 }
-#p4b{
+#p4b {
   grid-area: p4b;
-  transform: rotate(90deg)
+  transform: rotate(90deg);
 }
-#p4c{
+#p4c {
   grid-area: p4c;
-  transform: rotate(90deg)
+  transform: rotate(90deg);
 }
-#p4d{
+#p4d {
   grid-area: p4d;
-  transform: rotate(90deg)
+  transform: rotate(90deg);
 }
 
 img {
-  height: 60%;
-  width: 60%
+  height: 35%;
+  width: 35%;
 }
 
 #deck {
-  grid-area: De
+  grid-area: De;
 }
 
 #discard {
-  grid-area: Di
+  grid-area: Di;
 }
 
 .Selected {
@@ -116,10 +151,10 @@ img {
   float: left;
   margin-right: 20px;
   margin-bottom: 20px;
-  width: 75%;
-  height: 75%;
+  width: 50%;
+  height: 50%;
   cursor: pointer;
-  box-shadow: rgba(0,0,0,.2) 3px 5px 1px;
+  box-shadow: rgba(0, 0, 0, 0.2) 3px 5px 1px;
 }
 /* 
 .Selectect:hover:before{
