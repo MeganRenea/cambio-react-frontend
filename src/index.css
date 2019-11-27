@@ -42,8 +42,8 @@ code {
     ". . . . . btn . . . ."
     "p2 p2b p2d . . De . p4c p4a p4"
     "p2 p2a p2c . Di . . p4d p4b p4"
-    ". . . . log log . . . ."
-    ". . . . log log . . . ."
+    ". . . . . . . . . ."
+    ". . . . . . . . . ."
     ". . . . p1d p1c . . . ."
     ". . . . . . . . . ."
     ". . . . p1b p1a . . . ."
@@ -147,14 +147,15 @@ img {
 }
 
 .Selected {
-  position: relative;
+  border: 3px solid red;
+  /* position: relative;
   float: left;
   margin-right: 20px;
   margin-bottom: 20px;
   width: 50%;
   height: 50%;
   cursor: pointer;
-  box-shadow: rgba(0, 0, 0, 0.2) 3px 5px 1px;
+  box-shadow: rgba(0, 0, 0, 0.2) 3px 5px 1px; */
 }
 /* 
 .Selectect:hover:before{

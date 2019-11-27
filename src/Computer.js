@@ -17,6 +17,9 @@ export default class Computer extends React.Component {
     ) {
       setTimeout(() => this.props.computerPlay(), 5000);
     }
+    if (this.props.computer4played && this.props.p1Cambio) {
+      this.props.gameOver();
+    }
     if (this.props.computer4played) {
       this.props.resetPlay();
     }
@@ -27,6 +30,28 @@ export default class Computer extends React.Component {
       setTimeout(() => {
         this.props.computerHit();
       }, 2000);
+    }
+    if (prevProps.automaticCambio !== this.props.automaticCambio) {
+      let lastTurn = this.props.turn - 1;
+      if (lastTurn < 1) {
+        lastTurn = 4;
+      }
+      this.props.setLast(lastTurn);
+    }
+    if (
+      !this.props.p1a &&
+      !this.props.p1b &&
+      !this.props.p1c &&
+      !this.props.p1d &&
+      !this.props.cambio &&
+      this.props.playing &&
+      this.props.turn !== 1
+    ) {
+      if (!this.props.cambio) {
+        this.props.automaticCambioFunction("p1");
+      } else if (this.state.cambio) {
+        this.props.skipTurn();
+      }
     }
   }
   //   play = () => {

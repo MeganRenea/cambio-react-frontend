@@ -35,12 +35,25 @@ class App extends React.Component {
       JOKER: -1,
       ACE: 1,
       QUEEN: 10,
-      KING: 10,
-      JACK: 10
+      KC: 10,
+      KS: 10,
+      KH: 0,
+      KD: 0,
+      JACK: 10,
+      "10": 10,
+      "9": 9,
+      "8": 8,
+      "7": 7,
+      "6": 6,
+      "5": 5,
+      "4": 4,
+      "3": 3,
+      "2": 2
     },
     p2: { p2a: null, p2b: null, p2c: null, p2d: null },
     p3: { p3a: null, p3b: null, p3c: null, p3d: null },
     p4: { p4a: null, p4b: null, p4c: null, p4d: null },
+    p1: {},
     prevDeckCard: null,
     deckCard: null,
     playedCard: null,
@@ -53,32 +66,74 @@ class App extends React.Component {
     power: null,
     computer2played: false,
     computer3played: false,
-    computer4played: false
+    computer4played: false,
+    cambio: false
   };
 
   turn = false;
 
   drawDeck = () => {
-    fetch(
-      `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/draw/?count=1`
-    )
-      .then(resp => resp.json())
-      .then(json =>
-        this.setState({ deckCard: json.cards[0], secondCard: false })
-      );
+    if (this.state.currentTurn === 1) {
+      fetch(
+        `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/draw/?count=1`
+      )
+        .then(resp => resp.json())
+        .then(json =>
+          this.setState({ deckCard: json.cards[0], secondCard: false })
+        );
+    }
+  };
+
+  countPoints = playerHand => {
+    let cards = Object.values(playerHand).filter(card => card !== null);
+    console.log("in Handpoints cards", cards);
+    let cardValueKeys = cards.map(card => {
+      if (card.value === "KING") {
+        return card.code;
+      } else {
+        return card.value;
+      }
+    });
+    console.log("in Handpoints cardvalue keys", cardValueKeys);
+    let cardValues = cardValueKeys.map(
+      cardValueKey => this.state.points[cardValueKey]
+    );
+    console.log("in Handpoints cardvalues", cardValues);
+    let handPoints = cardValues.reduce(function(total, value) {
+      return total + value;
+    }, 0);
+    console.log("hand points ", handPoints);
+    return handPoints;
+  };
+
+  cambioDeleteCards = () => {
+    let allcards = { ...this.state.cards };
+    if (this.state.cambioCaller) {
+      let cambioCallerCardPositions = [
+        `${this.state.cambioCaller}a`,
+        `${this.state.cambioCaller}b`,
+        `${this.state.cambioCaller}c`,
+        `${this.state.cambioCaller}d`
+      ];
+      for (let i = 0; i < cambioCallerCardPositions.length; i++) {
+        delete allcards[cambioCallerCardPositions[i]];
+      }
+      return allcards;
+    } else {
+      return allcards;
+    }
   };
 
   computerPlay = () => {
     let computerKnows;
     let computer;
     let played;
+    let handPoints;
     let nextTurn = this.state.currentTurn + 1;
     if (nextTurn > 4) {
       nextTurn = 1;
     }
-    if (this.state.currentTurn === 1) {
-      return;
-    }
+
     if (this.state.currentTurn === 2) {
       computerKnows = this.state.p2;
       computer = "p2";
@@ -92,51 +147,442 @@ class App extends React.Component {
       computer = "p4";
       played = "computer4played";
     }
+    let computerHandPositions = [
+      `${computer}a`,
+      `${computer}b`,
+      `${computer}c`,
+      `${computer}d`
+    ];
+    let emptyHand = computerHandPositions
+      .map(position => this.state.cards[position])
+      .every(card => card === null);
 
-    if (Object.values(computerKnows).includes(null) && !this.state[played]) {
-      console.log(`${computer} is going`);
-      Promise.resolve(
-        fetch(
-          `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/draw/?count=1`
-        )
-          .then(resp => resp.json())
-          .then(json => {
-            console.log(`${computer} is drawing`);
-            this.setState({
-              deckCard: json.cards[0],
-              secondCard: false,
-              remaining: json.remaining
-            });
-          })
-      ).then(() => {
-        setTimeout(() => {
-          console.log(`in ${computer}'s turn`);
-          let newPosition = Object.keys(computerKnows).find(
-            key => computerKnows[key] === null
-          );
-          let card = this.state.cards[newPosition];
+    let AllcomputerHandPositions = [
+      ["p2a", "p2b", "p2c", "p2d"],
+      ["p3a", "p3b", "p3c", "p3d"],
+      ["p4a", "p4b", "p4c", "p4d"]
+    ];
+    let areTheyEmpty = AllcomputerHandPositions.map(computer =>
+      computer.map(position => {
+        return this.state.cards[position];
+      })
+    ).map(computer => computer.every(value => value === null));
+
+    if (areTheyEmpty[0] && !this.state.cambio) {
+      this.automaticCambio("p2");
+    } else if (areTheyEmpty[1] && !this.state.cambio) {
+      this.automaticCambio("p3");
+    } else if (areTheyEmpty[2] && !this.state.cambio) {
+      this.automaticCambio("p4");
+    }
+
+    if (emptyHand && this.state.cambio && !this.state[computer]["last"]) {
+      this.setState({ currentTurn: nextTurn });
+    }
+    handPoints = this.countPoints(computerKnows);
+    console.log(`${computer} Hand points `, handPoints);
+    if (
+      !Object.values(computerKnows).includes(null) &&
+      handPoints < 5 &&
+      !this.state.cambio
+    ) {
+      alert(`${computer} says CAMBIO`);
+      this.setState({
+        currentTurn: nextTurn,
+        [computer]: Object.assign(this.state[computer], { last: true }),
+        cambio: true,
+        [played]: true,
+        cambioCaller: computer
+      });
+    } else if (!this.state[computer]["last"]) {
+      if (Object.values(computerKnows).includes(null) && !this.state[played]) {
+        console.log(`${computer} is going`);
+        Promise.resolve(
           fetch(
-            `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
+            `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/draw/?count=1`
           )
             .then(resp => resp.json())
-            .then(json => this.setState({ remaining: json.remaining }));
-
-          this.setState({
-            currentTurn: nextTurn,
-            [played]: true,
-            topDiscard: card,
-            playedCard: card,
-            deckCard: null,
-            cards: Object.assign(this.state.cards, {
-              [newPosition]: this.state.deckCard
-            }),
-            [computer]: Object.assign(this.state[computer], {
-              [newPosition]: this.state.deckCard
+            .then(json => {
+              console.log(`${computer} is drawing`);
+              this.setState({
+                deckCard: json.cards[0],
+                secondCard: false,
+                remaining: json.remaining
+              });
             })
-          });
-        }, 5000);
-      });
+        ).then(() => {
+          setTimeout(() => {
+            console.log(`in ${computer}'s turn`);
+            let newPosition = Object.keys(computerKnows).find(
+              key => computerKnows[key] === null
+            );
+            let card = this.state.cards[newPosition];
+            fetch(
+              `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
+            )
+              .then(resp => resp.json())
+              .then(json => this.setState({ remaining: json.remaining }));
+
+            this.setState({
+              currentTurn: nextTurn,
+              [played]: true,
+              topDiscard: card,
+              playedCard: card,
+              deckCard: null,
+              cards: Object.assign(this.state.cards, {
+                [newPosition]: this.state.deckCard
+              }),
+              [computer]: Object.assign(this.state[computer], {
+                [newPosition]: this.state.deckCard
+              })
+            });
+          }, 5000);
+        });
+      } else if (!this.state[played]) {
+        Promise.resolve(
+          fetch(
+            `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/draw/?count=1`
+          )
+            .then(resp => resp.json())
+            .then(json => {
+              console.log(`${computer} is drawing`);
+              this.setState({
+                deckCard: json.cards[0],
+                secondCard: false,
+                remaining: json.remaining
+              });
+            })
+        ).then(() => {
+          setTimeout(() => {
+            let cards = Object.values(computerKnows);
+            let cardValues = cards.map(card => {
+              if (card.value === "KING") {
+                return card.code;
+              } else {
+                return card.value;
+              }
+            });
+            console.log("cardValues ", cardValues);
+            let deckCardValue;
+            if (this.state.deckCard.value === "KING") {
+              deckCardValue = this.state.deckCard.code;
+            } else {
+              deckCardValue = this.state.deckCard.value;
+            }
+            console.log("deck card value ", deckCardValue);
+            let higherCardValue = cardValues.find(
+              value =>
+                this.state.points[value] > this.state.points[deckCardValue]
+            );
+            console.log("higher card value ", higherCardValue);
+            let higherCard = cards.find(
+              card =>
+                card.value === higherCardValue || card.code === higherCardValue
+            );
+            console.log("higher card", higherCard);
+            let higherCardPosition = Object.keys(computerKnows).find(
+              key => computerKnows[key] === higherCard
+            );
+            if (higherCard) {
+              fetch(
+                `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${higherCard.code}`
+              )
+                .then(resp => resp.json())
+                .then(json => this.setState({ remaining: json.remaining }));
+
+              this.setState({
+                currentTurn: nextTurn,
+                [played]: true,
+                topDiscard: higherCard,
+                playedCard: higherCard,
+                deckCard: null,
+                cards: Object.assign(this.state.cards, {
+                  [higherCardPosition]: this.state.deckCard
+                }),
+                [computer]: Object.assign(this.state[computer], {
+                  [higherCardPosition]: this.state.deckCard
+                })
+              });
+            } else {
+              Promise.resolve(
+                fetch(
+                  `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${this.state.deckCard.code}`
+                )
+                  .then(resp => resp.json())
+                  .then(json =>
+                    this.setState(prevState => ({
+                      remaining: json.remaining,
+                      secondCard: false,
+                      prevDeckCard: prevState.deckCard,
+                      topDiscard: prevState.deckCard,
+                      selectedCardA: null,
+                      playedCard: prevState.deckCard,
+                      deckCard: null
+                    }))
+                  )
+              ).then(() => {
+                if (
+                  this.state.prevDeckCard.code === "KS" ||
+                  this.state.prevDeckCard.code === "KC"
+                ) {
+                  setTimeout(() => {
+                    console.log("lookSwap");
+                    let allcards = this.cambioDeleteCards();
+                    for (let position in computerKnows) {
+                      delete allcards[position];
+                    }
+                    let allCardsPositions = Object.keys(allcards).filter(
+                      position => allcards[position] !== null
+                    );
+                    let randomIndex = Math.floor(
+                      Math.random() * allCardsPositions.length
+                    );
+                    let randomCardPosition = allCardsPositions[randomIndex];
+                    let randomCard = allcards[randomCardPosition];
+                    let computerCards = Object.values(computerKnows);
+                    let computerCardValues = computerCards.map(card => {
+                      if (card.value === "KING") {
+                        return card.code;
+                      } else {
+                        return card.value;
+                      }
+                    });
+                    let cardValue;
+                    if (randomCard.value === "KING") {
+                      cardValue = randomCard.code;
+                    } else {
+                      cardValue = randomCard.value;
+                    }
+                    let higherCardValue = computerCardValues.find(
+                      value =>
+                        this.state.points[value] > this.state.points[cardValue]
+                    );
+                    let higherCard = computerCards.find(
+                      card => card.value === higherCardValue
+                    );
+                    let higherCardPosition = Object.keys(computerKnows).find(
+                      key => computerKnows[key] === higherCard
+                    );
+                    let randomCardPlayer = randomCardPosition.slice(0, 2);
+
+                    if (higherCard) {
+                      this.setState(prevState => ({
+                        cards: Object.assign(prevState.cards, {
+                          [higherCardPosition]: {
+                            ...randomCard,
+                            selected: true
+                          },
+                          [randomCardPosition]: {
+                            ...higherCard,
+                            selected: true
+                          }
+                        }),
+                        [computer]: Object.assign(prevState[computer], {
+                          [higherCardPosition]: randomCard,
+                          [randomCardPosition]: higherCard
+                        }),
+                        currentTurn: nextTurn,
+                        [played]: true,
+                        [randomCardPlayer]: Object.assign(prevState[computer], {
+                          [higherCardPosition]: randomCard,
+                          [randomCardPosition]: null
+                        })
+                      }));
+                      setTimeout(() => {
+                        Array.from(document.querySelectorAll(".Selected")).map(
+                          item => (item.className = "Not")
+                        );
+                        alert("Swapped!");
+                      }, 2000);
+                    } else {
+                      this.setState(prevState => ({
+                        cards: Object.assign(prevState.cards, {
+                          [randomCardPosition]: {
+                            ...randomCard,
+                            selected: true
+                          }
+                        }),
+                        [computer]: Object.assign(prevState[computer], {
+                          [randomCardPosition]: randomCard
+                        }),
+                        currentTurn: nextTurn,
+                        [played]: true
+                      }));
+                      setTimeout(() => {
+                        Array.from(document.querySelectorAll(".Selected")).map(
+                          item => (item.className = "Not")
+                        );
+                        alert("Swapped!");
+                      }, 2000);
+                    }
+                  }, 5000);
+                } else if (
+                  this.state.prevDeckCard.value === "QUEEN" ||
+                  this.state.prevDeckCard.value === "JACK"
+                ) {
+                  console.log("blindSwap");
+                  setTimeout(() => {
+                    let allcards = this.cambioDeleteCards();
+                    console.log("all cards ", allcards);
+                    for (let position in computerKnows) {
+                      delete allcards[position];
+                    }
+                    let allCardsPositions = Object.keys(allcards).filter(
+                      position => allcards[position] !== null
+                    );
+                    console.log("some deleted all cards ", allcards);
+
+                    let randomIndex1 = Math.floor(
+                      Math.random() * allCardsPositions.length
+                    );
+                    console.log("random index1 ", randomIndex1);
+                    let randomIndex2 = Math.floor(
+                      Math.random() * allCardsPositions.length
+                    );
+                    console.log("random index2 ", randomIndex2);
+                    let randomCardPosition1 = allCardsPositions[randomIndex1];
+                    console.log("random position1 ", randomCardPosition1);
+                    let randomCardPosition2 = allCardsPositions[randomIndex2];
+                    console.log("random position2 ", randomCardPosition2);
+                    let randomCard1 = allcards[randomCardPosition1];
+                    console.log("random card 1", randomCard1);
+                    let randomCard2 = allcards[randomCardPosition2];
+                    console.log("random card 2", randomCard2);
+                    let player1 = randomCardPosition1.slice(0, 2);
+                    let player2 = randomCardPosition2.slice(0, 2);
+                    this.setState(prevState => ({
+                      cards: Object.assign(prevState.cards, {
+                        [randomCardPosition1]: {
+                          ...randomCard2,
+                          selected: true
+                        },
+                        [randomCardPosition2]: {
+                          ...randomCard1,
+                          selected: true
+                        }
+                      }),
+                      [player1]: Object.assign(prevState[player1], {
+                        [randomCardPosition1]: null,
+                        [randomCardPosition2]: randomCard1
+                      }),
+                      [player2]: Object.assign(prevState[player2], {
+                        [randomCardPosition2]: null,
+                        [randomCardPosition1]: randomCard2
+                      }),
+                      currentTurn: nextTurn,
+                      [played]: true
+                    }));
+                    setTimeout(() => {
+                      Array.from(document.querySelectorAll(".Selected")).map(
+                        item => (item.className = "Not")
+                      );
+                      alert("Swapped!");
+                    }, 2000);
+                  }, 5000);
+                } else if (
+                  this.state.prevDeckCard.value === "8" ||
+                  this.state.prevDeckCard.value === "7"
+                ) {
+                  console.log("lookSelf");
+                  setTimeout(() => {
+                    this.setState({ currentTurn: nextTurn, [played]: true });
+                  }, 5000);
+                } else if (
+                  this.state.prevDeckCard.value === "9" ||
+                  this.state.prevDeckCard.value === "10"
+                ) {
+                  console.log("lookOther");
+                  setTimeout(() => {
+                    let allcards = this.cambioDeleteCards();
+                    for (let position in computerKnows) {
+                      delete allcards[position];
+                    }
+                    console.log("In look other all cards", allcards);
+                    let allCardsPositions = Object.keys(allcards).filter(
+                      position => allcards[position] !== null
+                    );
+                    console.log(
+                      "In look other all cards positions",
+                      allCardsPositions
+                    );
+                    let randomIndex = Math.floor(
+                      Math.random() * allCardsPositions.length
+                    );
+                    console.log("random index", randomIndex);
+                    let randomCardPosition = allCardsPositions[randomIndex];
+                    console.log("random card position", randomCardPosition);
+                    let randomCard = allcards[randomCardPosition];
+                    console.log("random card", randomCard);
+                    this.setState(prevState => ({
+                      cards: Object.assign(prevState.cards, {
+                        [randomCardPosition]: { ...randomCard, selected: true }
+                      }),
+                      [computer]: Object.assign(prevState[computer], {
+                        [randomCardPosition]: randomCard
+                      }),
+                      [played]: true,
+                      currentTurn: nextTurn
+                    }));
+                  }, 5000);
+                  setTimeout(() => {
+                    Array.from(document.querySelectorAll(".Selected")).map(
+                      item => (item.className = "Not")
+                    );
+                    alert("Swapped!");
+                  }, 2000);
+                } else {
+                  console.log("No power");
+                  setTimeout(() => {
+                    this.setState({ currentTurn: nextTurn, [played]: true });
+                  }, 5000);
+                }
+              });
+            }
+          }, 5000);
+        });
+      }
+    } else {
+      this.gameOver();
     }
+  };
+  gameOver = () => {
+    let p1Cards = {
+      p1a: this.state.cards.p1a,
+      p1b: this.state.cards.p1b,
+      p1c: this.state.cards.p1c,
+      p1d: this.state.cards.p1d
+    };
+    let p2Cards = {
+      p2a: this.state.cards.p2a,
+      p2b: this.state.cards.p2b,
+      p2c: this.state.cards.p2c,
+      p2d: this.state.cards.p2d
+    };
+    let p3Cards = {
+      p3a: this.state.cards.p3a,
+      p3b: this.state.cards.p3b,
+      p3c: this.state.cards.p3c,
+      p3d: this.state.cards.p3d
+    };
+    let p4Cards = {
+      p4a: this.state.cards.p4a,
+      p4b: this.state.cards.p4b,
+      p4c: this.state.cards.p4c,
+      p4d: this.state.cards.p4d
+    };
+    let playerpoints = {
+      Player1: this.countPoints(p1Cards),
+      Player2: this.countPoints(p2Cards),
+      Player3: this.countPoints(p3Cards),
+      Player4: this.countPoints(p4Cards)
+    };
+    let winningPoints = Math.min(...Object.values(playerpoints));
+    let winners = Object.keys(playerpoints).filter(
+      player => playerpoints[player] === winningPoints
+    );
+    alert(
+      `GameOver: Game points: Player1 has ${playerpoints.Player1} points. Player2 has ${playerpoints.Player2} points. Player3 has ${playerpoints.Player3} points. Player4 has ${playerpoints.Player4} points. ${winners} wins with ${winningPoints} points!`
+    );
   };
 
   computerHit = () => {
@@ -145,20 +591,35 @@ class App extends React.Component {
       { p3: this.state.p3 },
       { p4: this.state.p4 }
     ];
-    if (this.state.topDiscard && !this.state.secondCard) {
-      computerKnows.forEach(computer => {
-        setTimeout(() => {
-          let player = Object.keys(computer)[0];
-          let cards = Object.values(computer)[0];
-          console.log("cards", cards);
 
-          let matchingCard = Object.values(cards).find(
-            card => card && card.value === this.state.topDiscard.value
-          );
-          let position = Object.keys(cards).find(
-            key => cards[key] === matchingCard
-          );
-          if (matchingCard) {
+    if (this.state.topDiscard && !this.state.secondCard) {
+      let matchingCardArray = computerKnows.map(computer => {
+        let cards = Object.values(computer)[0];
+
+        let matchingCard = Object.values(cards).find(
+          card => card && card.value === this.state.topDiscard.value
+        );
+        let position = Object.keys(cards).find(
+          key => cards[key] === matchingCard
+        );
+        if (matchingCard) {
+          return { [position]: matchingCard };
+        } else {
+          return null;
+        }
+      });
+      let matchingCardObject = matchingCardArray.find(card => card);
+
+      if (matchingCardObject) {
+        let matchingCard = Object.values(matchingCardObject)[0];
+        console.log("matching card", matchingCard);
+        let position = Object.keys(matchingCardObject)[0];
+        let actualCard = this.state.cards[position];
+        console.log("actual card", actualCard);
+        let player = position.slice(0, 2);
+        if (!this.state.secondCard && matchingCard === actualCard) {
+          setTimeout(() => {
+            let cards = this.state[player];
             delete cards[position];
             fetch(
               `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${matchingCard.code}`
@@ -170,10 +631,25 @@ class App extends React.Component {
               [player]: cards,
               selectedCardA: null
             }));
-          }
-        });
-      }, 2000);
+          }, 2000);
+        }
+      }
     }
+  };
+
+  automaticCambio = player => {
+    this.setState({
+      cambio: true,
+      automaticCambio: true,
+      cambioCaller: player
+    });
+
+    alert("Cambio out! Last turn around.");
+  };
+
+  setLast = turn => {
+    let player = `p${turn}`;
+    this.setState({ [player]: { last: true } });
   };
 
   resetPlay = () => {
@@ -200,6 +676,8 @@ class App extends React.Component {
     if (this.state.selectedCardA && this.state.selectedCardB) {
       let positionA = Object.keys(this.state.selectedCardA)[0];
       let positionB = Object.keys(this.state.selectedCardB)[0];
+      let player1 = positionA.slice(0, 2);
+      let player2 = positionB.slice(0, 2);
       this.setState(prevState => ({
         cards: Object.assign(prevState.cards, {
           [positionA]: prevState.selectedCardB[positionB],
@@ -207,7 +685,14 @@ class App extends React.Component {
         }),
         selectedCardA: null,
         selectedCardB: null,
+        [player1]: Object.assign(prevState[player1], {
+          [positionA]: null
+        }),
+        [player2]: Object.assign(prevState[player2], {
+          [positionB]: null
+        }),
         power: null,
+
         currentTurn: prevState.currentTurn + 1
       }));
 
@@ -233,6 +718,8 @@ class App extends React.Component {
     if (this.state.selectedCardA && this.state.selectedCardB) {
       let positionA = Object.keys(this.state.selectedCardA)[0];
       let positionB = Object.keys(this.state.selectedCardB)[0];
+      let player1 = positionA.slice(0, 2);
+      let player2 = positionB.slice(0, 2);
       this.setState(prevState => ({
         cards: Object.assign(prevState.cards, {
           [positionA]: prevState.selectedCardB[positionB],
@@ -240,7 +727,16 @@ class App extends React.Component {
         }),
         selectedCardA: null,
         selectedCardB: null,
+        [player1]: Object.assign(prevState[player1], {
+          [positionA]: null,
+          [positionB]: prevState.selectedCardA[positionA]
+        }),
+        [player2]: Object.assign(prevState[player2], {
+          [positionB]: null,
+          [positionA]: prevState.selectedCardB[positionB]
+        }),
         power: null,
+
         currentTurn: prevState.currentTurn + 1
       }));
 
@@ -258,6 +754,15 @@ class App extends React.Component {
     //   console.log("right")
     //   event.target.className = "Not"
     // }
+    let noCards = p1Cards
+      .map(position => this.state.cards[position])
+      .every(card => card === null);
+    console.log("p1 no cards?", noCards);
+    if (noCards && !this.state.cambio) {
+      this.automaticCambio("p1");
+    } else if (noCards && this.state.cambio) {
+      this.setState({ currentTurn: 2 });
+    }
     if (p1Cards.includes(position) && this.state.deckCard) {
       fetch(
         `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
@@ -278,6 +783,10 @@ class App extends React.Component {
       event.target.className = "Selected";
       //change view of card
       if (card.value === this.state.topDiscard.value) {
+        let cardPosition = Object.keys(this.state.cards).find(
+          position => this.state.cards[position] === card
+        );
+        let player = cardPosition.slice(0, 2);
         fetch(
           `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
         );
@@ -285,7 +794,8 @@ class App extends React.Component {
           secondCard: true,
           cards: Object.assign(prevState.cards, { [position]: null }),
           topDiscard: card,
-          selectedCardA: null
+          selectedCardA: null,
+          [player]: Object.assign(prevState[player], { [cardPosition]: null })
         }));
       } else {
         console.log("wrong");
@@ -322,7 +832,7 @@ class App extends React.Component {
     console.log("in look other");
 
     let p1Cards = ["p1a", "p1b", "p1c", "p1d"];
-    if (!p1Cards.includes(position) & !this.state.selectedCardA) {
+    if (!p1Cards.includes(position) && !this.state.selectedCardA) {
       if (event.target.className !== "Selected") {
         this.setState({ selectedCardA: { [position]: card } });
       }
@@ -403,6 +913,7 @@ class App extends React.Component {
       return (
         <Card
           card={this.state.cards[key]}
+          cardBack={cardBack}
           position={key}
           joker={joker}
           blindSwap={this.blindSwap}
@@ -456,9 +967,37 @@ class App extends React.Component {
       });
   };
 
+  callCambio = () => {
+    this.setState({
+      p1: { last: true },
+      currentTurn: 2,
+      cambio: true,
+      cambioCaller: "p1"
+    });
+    alert("Player 1 calls cambio");
+  };
+
+  skipTurn = () => {
+    this.setState({ currentTurn: 2 });
+  };
+
   render() {
     return (
       <div className="app">
+        {(this.state.cards.p1a ||
+          this.state.cards.p1b ||
+          this.state.cards.p1c ||
+          this.state.cards.p1d) &&
+        this.state.currentTurn === 1 &&
+        !this.state.cambio &&
+        this.countPoints({
+          p1a: this.state.cards.p1a,
+          p1b: this.state.cards.p1b,
+          p1c: this.state.cards.p1c,
+          p1d: this.state.cards.p1d
+        }) < 5 ? (
+          <button onClick={() => this.callCambio()}>Cambio?</button>
+        ) : null}
         {!this.state.playing ? <button onClick={this.play}>Play</button> : null}
         {this.state.playing ? this.renderCards() : null}
         <TurnLabel turn={this.state.currentTurn} />
@@ -473,6 +1012,15 @@ class App extends React.Component {
           computerHit={this.computerHit}
           secondCard={this.state.secondCard}
           topDiscard={this.state.topDiscard}
+          p1Cambio={this.state.p1["last"]}
+          gameOver={this.gameOver}
+          setLast={this.setLast}
+          automaticCambio={this.state.automaticCambio}
+          {...this.state.cards}
+          automaticCambioFunction={this.automaticCambio}
+          skipTurn={this.skipTurn}
+          cambio={this.state.cambio}
+          playing={this.state.playing}
         />
         <Deck
           cardBack={cardBack}
