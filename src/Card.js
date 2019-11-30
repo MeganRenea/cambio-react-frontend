@@ -1,13 +1,12 @@
 import React from "react";
 
 export default class Card extends React.Component {
-  powerfulCards = ["QUEEN", "JACK", "KS", "KC", 8, 7, 9, 10];
-  blindSwap = ["QUEEN", "JACK"];
-  lookSwap = ["KS", "KC"];
-  lookSelf = [8, 7];
-  lookOther = [9, 10];
-  sameCard = () =>
-    this.props.playedCard && this.props.playedCard === this.props.prevdeckCard;
+  emptyDivStyle = {
+    height: "103.62px",
+    width: "74.58px",
+    // background: "white",
+    position: "flex"
+  };
 
   render() {
     return (
@@ -50,7 +49,9 @@ export default class Card extends React.Component {
                 : this.props.card.image
             }
           />
-        ) : null}
+        ) : (
+          <div style={this.emptyDivStyle}></div>
+        )}
       </div>
     );
   }

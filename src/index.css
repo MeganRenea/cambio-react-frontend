@@ -15,6 +15,7 @@ code {
 
 .app {
   display: grid;
+  position: sticky;
 
   grid-template-columns: repeat(
     10,
@@ -34,12 +35,12 @@ code {
   width: 100vw;
   align-items: center;
   grid-template-areas:
-    ". . . . p3 p3 . . . ."
+    ". . . . p3 p3 p3 . . ."
     ". . . . p3a p3b . . . ."
     ". . . . . . . . . ."
     ". . . . p3c p3d . . . ."
     ". . . . . . . . . ."
-    ". . . . . btn . . . ."
+    "p2 . . . . btn . . . p4"
     "p2 p2b p2d . . De . p4c p4a p4"
     "p2 p2a p2c . Di . . p4d p4b p4"
     ". . . . . . . . . ."
@@ -47,7 +48,7 @@ code {
     ". . . . p1d p1c . . . ."
     ". . . . . . . . . ."
     ". . . . p1b p1a . . . ."
-    ". . . . p1 p1 . . . .";
+    ". . . . p1 p1 p1 . . .";
 }
 
 button {

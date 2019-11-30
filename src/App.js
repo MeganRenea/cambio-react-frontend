@@ -528,7 +528,6 @@ class App extends React.Component {
                     Array.from(document.querySelectorAll(".Selected")).map(
                       item => (item.className = "Not")
                     );
-                    alert("Swapped!");
                   }, 2000);
                 } else {
                   console.log("No power");
@@ -591,19 +590,32 @@ class App extends React.Component {
       { p3: this.state.p3 },
       { p4: this.state.p4 }
     ];
+    if (this.state.cambioCaller) {
+      computerKnows = computerKnows.map(computer => {
+        if (Object.keys(computer)[0] === this.state.cambioCaller) {
+          delete computer[this.state.cambioCaller];
+        } else {
+          return {
+            [Object.keys(computer)[0]]: this.state[Object.keys(computer)[0]]
+          };
+        }
+      });
+    }
 
     if (this.state.topDiscard && !this.state.secondCard) {
       let matchingCardArray = computerKnows.map(computer => {
-        let cards = Object.values(computer)[0];
+        if (computer) {
+          let cards = Object.values(computer)[0];
 
-        let matchingCard = Object.values(cards).find(
-          card => card && card.value === this.state.topDiscard.value
-        );
-        let position = Object.keys(cards).find(
-          key => cards[key] === matchingCard
-        );
-        if (matchingCard) {
-          return { [position]: matchingCard };
+          let matchingCard = Object.values(cards).find(
+            card => card && card.value === this.state.topDiscard.value
+          );
+          let position = Object.keys(cards).find(
+            key => cards[key] === matchingCard
+          );
+          if (matchingCard) {
+            return { [position]: matchingCard };
+          }
         } else {
           return null;
         }
@@ -787,6 +799,8 @@ class App extends React.Component {
           position => this.state.cards[position] === card
         );
         let player = cardPosition.slice(0, 2);
+        let playerCards = { ...this.state[player] };
+        delete playerCards[card];
         fetch(
           `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
         );
@@ -795,7 +809,7 @@ class App extends React.Component {
           cards: Object.assign(prevState.cards, { [position]: null }),
           topDiscard: card,
           selectedCardA: null,
-          [player]: Object.assign(prevState[player], { [cardPosition]: null })
+          [player]: playerCards
         }));
       } else {
         console.log("wrong");
@@ -989,6 +1003,7 @@ class App extends React.Component {
           this.state.cards.p1c ||
           this.state.cards.p1d) &&
         this.state.currentTurn === 1 &&
+        !this.state.deckCard &&
         !this.state.cambio &&
         this.countPoints({
           p1a: this.state.cards.p1a,
@@ -1000,7 +1015,7 @@ class App extends React.Component {
         ) : null}
         {!this.state.playing ? <button onClick={this.play}>Play</button> : null}
         {this.state.playing ? this.renderCards() : null}
-        <TurnLabel turn={this.state.currentTurn} />
+        <TurnLabel turn={this.state.currentTurn} playing={this.state.playing} />
         <Computer
           computerPlay={this.computerPlay}
           turn={this.state.currentTurn}
