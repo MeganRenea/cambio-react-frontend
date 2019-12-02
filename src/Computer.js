@@ -39,10 +39,10 @@ export default class Computer extends React.Component {
       this.props.setLast(lastTurn);
     }
     if (
-      !this.props.p1a &&
-      !this.props.p1b &&
-      !this.props.p1c &&
-      !this.props.p1d &&
+      !this.props.cards.p1a &&
+      !this.props.cards.p1b &&
+      !this.props.cards.p1c &&
+      !this.props.cards.p1d &&
       !this.props.cambio &&
       this.props.playing &&
       this.props.turn !== 1
@@ -52,6 +52,16 @@ export default class Computer extends React.Component {
       } else if (this.state.cambio) {
         this.props.skipTurn();
       }
+    }
+    if (
+      Object.values(this.props.cards).every(card => card) !==
+        Object.values(prevProps.cards).every(card => card) &&
+      this.props.firstTime
+    ) {
+      this.props.showCards();
+    }
+    if (this.props.turn === 1 && this.props.deckCard && this.props.firstTime) {
+      this.props.hideCards();
     }
   }
   //   play = () => {

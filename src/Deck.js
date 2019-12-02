@@ -1,4 +1,5 @@
 import React from "react";
+import deckBack from "./deckBack.png";
 
 export default class Deck extends React.Component {
   render() {
@@ -11,7 +12,7 @@ export default class Deck extends React.Component {
               ? this.props.deckCard.image
               : this.props.deckCard && this.props.deckCard.value === "JOKER"
               ? this.props.joker
-              : this.props.cardBack
+              : deckBack
           }
         />
       </div>

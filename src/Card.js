@@ -1,4 +1,5 @@
 import React from "react";
+import emptyPic from "./backgroundImage.png";
 
 export default class Card extends React.Component {
   emptyDivStyle = {
@@ -43,14 +44,15 @@ export default class Card extends React.Component {
                     this.props.lookSelf(e, this.props.card, this.props.position)
             }
             src={
-              this.props.card.image.includes("joker") ||
-              this.props.card.value === "JOKER"
+              this.props.card.front && this.props.card.value === "JOKER"
                 ? this.props.joker
-                : this.props.card.image
+                : this.props.card.front
+                ? this.props.card.image
+                : this.props.cardBack
             }
           />
         ) : (
-          <div style={this.emptyDivStyle}></div>
+          <img src={emptyPic} />
         )}
       </div>
     );
