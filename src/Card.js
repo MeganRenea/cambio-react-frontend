@@ -40,6 +40,15 @@ export default class Card extends React.Component {
                       this.props.card,
                       this.props.position
                     )
+                : this.props.power === "discardTrade"
+                ? () =>
+                    this.props.discardTrade(
+                      this.props.card,
+                      this.props.position
+                    )
+                : this.props.power === "swipedCard"
+                ? () =>
+                    this.props.swipedCard(this.props.card, this.props.position)
                 : e =>
                     this.props.lookSelf(e, this.props.card, this.props.position)
             }

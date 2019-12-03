@@ -44,8 +44,7 @@ export default class Computer extends React.Component {
       !this.props.cards.p1c &&
       !this.props.cards.p1d &&
       !this.props.cambio &&
-      this.props.playing &&
-      this.props.turn !== 1
+      !this.props.firstTime
     ) {
       if (!this.props.cambio) {
         this.props.automaticCambioFunction("p1");

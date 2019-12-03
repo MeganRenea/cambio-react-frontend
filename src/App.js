@@ -226,6 +226,7 @@ class App extends React.Component {
 
             this.setState({
               currentTurn: nextTurn,
+              secondCard: false,
               [played]: true,
               topDiscard: card,
               playedCard: card,
@@ -598,24 +599,7 @@ class App extends React.Component {
       p4c: this.state.cards.p4c,
       p4d: this.state.cards.p4d
     };
-    // let allCards = {
-    //   p1a: { ...this.state.cards.p1a, front: true },
-    //   p1b: { ...this.state.cards.p1b, front: true },
-    //   p1c: { ...this.state.cards.p1c, front: true },
-    //   p1d: { ...this.state.cards.p1d, front: true },
-    //   p2a: { ...this.state.cards.p2a, front: true },
-    //   p2b: { ...this.state.cards.p2b, front: true },
-    //   p2c: { ...this.state.cards.p2c, front: true },
-    //   p2d: { ...this.state.cards.p2d, front: true },
-    //   p3a: { ...this.state.cards.p3a, front: true },
-    //   p3b: { ...this.state.cards.p3b, front: true },
-    //   p3c: { ...this.state.cards.p3c, front: true },
-    //   p3d: { ...this.state.cards.p3d, front: true },
-    //   p4a: { ...this.state.cards.p4a, front: true },
-    //   p4b: { ...this.state.cards.p4b, front: true },
-    //   p4c: { ...this.state.cards.p4c, front: true },
-    //   p4d: { ...this.state.cards.p4d, front: true }
-    // };
+
     let allCards = {};
     for (let key in this.state.cards) {
       if (this.state.cards[key]) {
@@ -637,13 +621,29 @@ class App extends React.Component {
         cards: Object.assign(prevState.cards, allCards)
       }))
     ).then(() => {
+      let cambioCaller = this.state.cambioCaller;
+      let cambioCallerCards = Object.assign(this.state[cambioCaller], {
+        [`${cambioCaller}a`]: null,
+        [`${cambioCaller}b`]: null,
+        [`${cambioCaller}c`]: null,
+        [`${cambioCaller}d`]: null
+      });
+      delete cambioCallerCards["last"];
       setTimeout(
         () =>
-          this.setState({
+          this.setState(prevState => ({
             playing: false,
             currentTurn: null,
-            topDiscard: null
-          }),
+            topDiscard: null,
+            firstTime: true,
+            p2: { p2a: null, p2b: null, p2c: null, p2d: null },
+            p3: { p3a: null, p3b: null, p3c: null, p3d: null },
+            p4: { p4a: null, p4b: null, p4c: null, p4d: null },
+            cambioCaller: null,
+            cambio: false,
+            automaticCambio: false,
+            [cambioCaller]: cambioCallerCards
+          })),
         4000
       );
     });
@@ -746,40 +746,41 @@ class App extends React.Component {
       if (event.target.className !== "Selected") {
         if (!this.state.selectedCardA) {
           event.target.className = "Selected";
+          console.log("clicked");
           this.setState({ selectedCardA: { [position]: card } });
-        } else if (this.state.selectedCardA && !this.state.selectedCardB) {
-          event.target.className = "Selected";
-          Promise.resolve(
-            this.setState({ selectedCardB: { [position]: card } })
-          ).then(() => {
-            let positionA = Object.keys(this.state.selectedCardA)[0];
-            let positionB = Object.keys(this.state.selectedCardB)[0];
-            let player1 = positionA.slice(0, 2);
-            let player2 = positionB.slice(0, 2);
-            this.setState(prevState => ({
-              cards: Object.assign(prevState.cards, {
-                [positionA]: prevState.selectedCardB[positionB],
-                [positionB]: prevState.selectedCardA[positionA]
-              }),
-              selectedCardA: null,
-              selectedCardB: null,
-              [player1]: Object.assign(prevState[player1], {
-                [positionA]: null
-              }),
-              [player2]: Object.assign(prevState[player2], {
-                [positionB]: null
-              }),
-              power: null,
-
-              currentTurn: prevState.currentTurn + 1
-            }));
-
-            Array.from(document.querySelectorAll(".Selected")).map(
-              item => (item.className = "Not")
-            );
-            alert("Swapped!");
-          });
         }
+      } else if (this.state.selectedCardA && !this.state.selectedCardB) {
+        event.target.className = "Selected";
+        Promise.resolve(
+          this.setState({ selectedCardB: { [position]: card } })
+        ).then(() => {
+          let positionA = Object.keys(this.state.selectedCardA)[0];
+          let positionB = Object.keys(this.state.selectedCardB)[0];
+          let player1 = positionA.slice(0, 2);
+          let player2 = positionB.slice(0, 2);
+          this.setState(prevState => ({
+            cards: Object.assign(prevState.cards, {
+              [positionA]: prevState.selectedCardB[positionB],
+              [positionB]: prevState.selectedCardA[positionA]
+            }),
+            selectedCardA: null,
+            selectedCardB: null,
+            [player1]: Object.assign(prevState[player1], {
+              [positionA]: null
+            }),
+            [player2]: Object.assign(prevState[player2], {
+              [positionB]: null
+            }),
+            power: null,
+
+            currentTurn: prevState.currentTurn + 1
+          }));
+
+          Array.from(document.querySelectorAll(".Selected")).map(
+            item => (item.className = "Not")
+          );
+          alert("Swapped!");
+        });
       }
     }
   };
@@ -789,6 +790,7 @@ class App extends React.Component {
     let p1Positions = ["p1a", "p1b", "p1c", "p1d"];
     if (!this.state.selectedCardA || !this.state.selectedCardB) {
       if (!this.state.selectedCardA && !p1Positions.includes(position)) {
+        console.log("clicked");
         event.target.className = "Selected";
         Promise.resolve(
           this.setState(prevState => ({
@@ -883,23 +885,34 @@ class App extends React.Component {
       event.target.className = "Selected";
       //change view of card
       if (card.value === this.state.topDiscard.value) {
-        console.log(card);
-        console.log(this.state.cards[position]);
-        console.log(card === this.state.cards[position]);
-
-        let player = position.slice(0, 2);
-        let playerCards = { ...this.state[player] };
-        delete playerCards[card];
-        fetch(
-          `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
-        );
-        this.setState(prevState => ({
-          secondCard: true,
-          cards: Object.assign(prevState.cards, { [position]: null }),
-          topDiscard: card,
-          selectedCardA: null,
-          [player]: playerCards
-        }));
+        if (!p1Cards.includes(position)) {
+          let player = position.slice(0, 2);
+          let playerCards = { ...this.state[player] };
+          delete playerCards[card];
+          fetch(
+            `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
+          );
+          this.setState(prevState => ({
+            secondCard: true,
+            cards: Object.assign(prevState.cards, { [position]: null }),
+            topDiscard: card,
+            selectedCardA: null,
+            [player]: playerCards,
+            swipedCard: position,
+            power: "swipedCard"
+          }));
+          alert("Select which card you want to replaced it with");
+        } else {
+          fetch(
+            `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
+          );
+          this.setState(prevState => ({
+            secondCard: true,
+            cards: Object.assign(prevState.cards, { [position]: null }),
+            topDiscard: card,
+            selectedCardA: null
+          }));
+        }
       } else {
         console.log("wrong");
         event.persist();
@@ -909,6 +922,20 @@ class App extends React.Component {
         }, 1000);
       }
     }
+  };
+
+  swipedCard = (card, position) => {
+    console.log("in swiped card");
+    let player = position.slice(0, 2);
+    this.setState(prevState => ({
+      cards: Object.assign(prevState.cards, {
+        [prevState.swipedCard]: card,
+        [position]: null
+      }),
+      [player]: Object.assign(prevState[player], { [position]: null }),
+      power: null,
+      swipedCard: null
+    }));
   };
 
   lookSelf = (event, card, position) => {
@@ -947,6 +974,7 @@ class App extends React.Component {
 
     let p1Cards = ["p1a", "p1b", "p1c", "p1d"];
     if (!p1Cards.includes(position) && !this.state.selectedCardA) {
+      console.log("clicked");
       event.target.className = "Selected";
       Promise.resolve(
         this.setState(prevState => ({
@@ -968,17 +996,17 @@ class App extends React.Component {
               [position]: { ...prevState.cards[position], front: false }
             })
           }));
-        }, 4000);
+        }, 1000);
       });
     }
   };
 
-  discardCard = () => {
+  discardCard = (event, card) => {
     let turn = this.state.currentTurn + 1;
     if (turn === 5) {
       turn = 1;
     }
-    if (this.state.deckCard) {
+    if (this.state.deckCard && this.state.currentTurn === 1) {
       fetch(
         `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${this.state.deckCard.code}`
       );
@@ -1015,13 +1043,49 @@ class App extends React.Component {
         playedCard: prevState.deckCard,
         deckCard: null
       }));
-    }
+    } else if (!this.state.deckCard && this.state.currentTurn === 1) {
+      event.target.className = "Selected";
+      console.log("selected discard");
 
-    // else if(this.state.selectedCardA){
-    //   fetch(`https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${this.state.selectedCardA.code}`)
-    //   let position = Object.keys(this.state.selectedCardA)
-    //   this.setState(prevState => ({cards: Object.assign(prevState.cards, {[position]:null}),topDiscard: prevState.selectedCardA[position], selectedCardA: null,  deckCard:null}))
-    // }
+      Promise.all([
+        fetch(
+          `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/draw/?cards=${card.code}`
+        ),
+        this.setState({ selectedCardA: card, power: "discardTrade" })
+      ]).then(() => {
+        alert("Select one of your cards to trade with discarded card.");
+        console.log(this.selectedCardA);
+      });
+    }
+  };
+
+  discardTrade = (card, position) => {
+    let p1Cards = ["p1a", "p1b", "p1c", "p1d"];
+    console.log("in discardtrade");
+    console.log("selected card", card);
+    console.log(position);
+    if (p1Cards.includes(position)) {
+      console.log("selecting a card");
+      console.log(this.state.selectedCardA);
+      fetch(
+        `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
+      ).then(() => console.log("adding new card to discard"));
+      Promise.resolve(
+        this.setState(prevState => ({
+          cards: Object.assign(prevState.cards, {
+            [position]: prevState.selectedCardA
+          }),
+          topDiscard: card,
+          currentTurn: 2,
+          power: null,
+          selectedCardA: null
+        }))
+      ).then(() => {
+        Array.from(document.querySelectorAll(".Selected")).map(
+          card => (card.className = "Not")
+        );
+      });
+    }
   };
 
   componentDidMount() {
@@ -1037,9 +1101,11 @@ class App extends React.Component {
       return (
         <Card
           card={this.state.cards[key]}
+          discardTrade={this.discardTrade}
           cardBack={cardBack}
           position={key}
           joker={joker}
+          swipedCard={this.swipedCard}
           blindSwap={this.blindSwap}
           regularPlay={this.regularPlay}
           lookOther={this.lookOther}

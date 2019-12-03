@@ -15,7 +15,7 @@ code {
 
 .app {
   display: grid;
-  position: sticky;
+  position: fixed;
 
   grid-template-columns: repeat(
     10,
@@ -40,10 +40,10 @@ code {
     ". . . . . . . . . ."
     ". . . . p3c p3d . . . ."
     ". . . . . . . . . ."
-    "p2 . . . . btn . . . p4"
+    ". . . . . btn . . . ."
     "p2 p2b p2d . . De . p4c p4a p4"
+    "p2 . . . . . . . . p4"
     "p2 p2a p2c . Di . . p4d p4b p4"
-    ". . . . . . . . . ."
     ". . . . . . . . . ."
     ". . . . p1d p1c . . . ."
     ". . . . . . . . . ."
@@ -89,6 +89,42 @@ button {
 #p1d {
   grid-area: p1d;
 }
+
+#p2a > img {
+  left: 35px;
+  position: relative;
+}
+#p2c > img {
+  left: 35px;
+  position: relative;
+}
+
+#p2d > img {
+  left: 35px;
+  position: relative;
+}
+#p2b > img {
+  left: 35px;
+  position: relative;
+}
+
+#p4a > img {
+  left: 35px;
+  position: relative;
+}
+#p4c > img {
+  left: 35px;
+  position: relative;
+}
+#p4d > img {
+  left: 35px;
+  position: relative;
+}
+#p4b > img {
+  left: 35px;
+  position: relative;
+}
+
 #p2a {
   grid-area: p2a;
   transform: rotate(90deg);
