@@ -5,7 +5,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: black;
+  z-index: -1;
 }
 
 code {
@@ -16,6 +16,8 @@ code {
 .app {
   display: grid;
   position: fixed;
+  background: url("./dark-wood-table-texture-datenlaborinfo-table-dark-wood-flooring-l-53f137ea81e16a85.jpg");
+  background-size: cover;
 
   grid-template-columns: repeat(
     10,
@@ -34,26 +36,52 @@ code {
   height: 100vh;
   width: 100vw;
   align-items: center;
+  text-align: center;
   grid-template-areas:
-    ". . . . p3 p3 p3 . . ."
-    ". . . . p3a p3b . . . ."
-    ". . . . . . . . . ."
-    ". . . . p3c p3d . . . ."
-    ". . . . . . . . . ."
-    ". . . . . btn . . . ."
-    "p2 p2b p2d . . De . p4c p4a p4"
-    "p2 . . . . . . . . p4"
-    "p2 p2a p2c . Di . . p4d p4b p4"
-    ". . . . . . . . . ."
-    ". . . . p1d p1c . . . ."
-    ". . . . . . . . . ."
-    ". . . . p1b p1a . . . ."
-    ". . . . p1 p1 p1 . . .";
+    ". . . . p3 p3 p3 . . . ."
+    ". . . . p3a . p3b . . . ."
+    ". . . . . . . . . . ."
+    ". . . . p3c . p3d . . . ."
+    ". . . . . cambio . . . . . "
+    ". . . . . btn . . . . . "
+    "p2 p2b p2d . . . De . p4c p4a p4"
+    "p2 . . . . . . . . . p4"
+    "p2 p2a p2c . Di . . . p4d p4b p4"
+    ". . . . . . . . . . ."
+    ". . . . p1d . p1c . . . ."
+    ". . . . . . . . . . ."
+    ". . . . p1b . p1a . . . ."
+    ". ru . . p1 p1 p1 . . . . ";
+}
+
+#cambio {
+  grid-area: cambio;
+  color: white;
 }
 
 button {
+  width: 80px;
+  height: 35px;
+  border-radius: 50px;
   grid-area: btn;
-  width: 35%;
+  text-align: center;
+}
+
+button:hover {
+  background-color: rgb(4, 146, 189);
+}
+
+#intro {
+  grid-area: btn;
+  border: 1px;
+}
+
+#rules {
+  width: 5%;
+  height: 3%;
+  top: 10%;
+  left: 15%;
+  position: fixed;
 }
 #player1 {
   grid-area: p1;
@@ -88,41 +116,6 @@ button {
 }
 #p1d {
   grid-area: p1d;
-}
-
-#p2a > img {
-  left: 35px;
-  position: relative;
-}
-#p2c > img {
-  left: 35px;
-  position: relative;
-}
-
-#p2d > img {
-  left: 35px;
-  position: relative;
-}
-#p2b > img {
-  left: 35px;
-  position: relative;
-}
-
-#p4a > img {
-  left: 35px;
-  position: relative;
-}
-#p4c > img {
-  left: 35px;
-  position: relative;
-}
-#p4d > img {
-  left: 35px;
-  position: relative;
-}
-#p4b > img {
-  left: 35px;
-  position: relative;
 }
 
 #p2a {

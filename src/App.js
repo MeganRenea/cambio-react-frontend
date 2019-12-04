@@ -8,9 +8,12 @@ import Deck from "./Deck";
 import Discard from "./Discard";
 import TurnLabel from "./TurnLabel";
 import Computer from "./Computer";
+import { Modal, Button } from "react-bootstrap";
+import cambio from "./cambio.gif";
 
 class App extends React.Component {
   state = {
+    rules: false,
     deck_id: null,
     playing: false,
     cards: {
@@ -68,6 +71,7 @@ class App extends React.Component {
     computer3played: false,
     computer4played: false,
     cambio: false,
+    automaticCambio: false,
     firstTime: true
   };
 
@@ -455,6 +459,12 @@ class App extends React.Component {
                     let randomIndex2 = Math.floor(
                       Math.random() * allCardsPositions.length
                     );
+
+                    if (randomIndex1 === randomIndex2) {
+                      randomIndex2 = Math.floor(
+                        Math.random() * allCardsPositions.length
+                      );
+                    }
                     console.log("random index2 ", randomIndex2);
                     let randomCardPosition1 = allCardsPositions[randomIndex1];
                     console.log("random position1 ", randomCardPosition1);
@@ -632,23 +642,73 @@ class App extends React.Component {
       setTimeout(
         () =>
           this.setState(prevState => ({
+            rules: false,
+            deck_id: null,
             playing: false,
-            currentTurn: null,
-            topDiscard: null,
-            firstTime: true,
+            cards: {
+              p1a: null,
+              p1b: null,
+              p1c: null,
+              p1d: null,
+              p2a: null,
+              p2b: null,
+              p2c: null,
+              p2d: null,
+              p3a: null,
+              p3b: null,
+              p3c: null,
+              p3d: null,
+              p4a: null,
+              p4b: null,
+              p4c: null,
+              p4d: null
+            },
+            points: {
+              JOKER: -1,
+              ACE: 1,
+              QUEEN: 10,
+              KC: 10,
+              KS: 10,
+              KH: 0,
+              KD: 0,
+              JACK: 10,
+              "10": 10,
+              "9": 9,
+              "8": 8,
+              "7": 7,
+              "6": 6,
+              "5": 5,
+              "4": 4,
+              "3": 3,
+              "2": 2
+            },
             p2: { p2a: null, p2b: null, p2c: null, p2d: null },
             p3: { p3a: null, p3b: null, p3c: null, p3d: null },
             p4: { p4a: null, p4b: null, p4c: null, p4d: null },
-            cambioCaller: null,
+            p1: {},
+            prevDeckCard: null,
+            deckCard: null,
+            playedCard: null,
+            selectedCardA: null,
+            selectedCardB: null,
+            topDiscard: null,
+            currentTurn: null,
+            secondCard: false,
+            remaining: null,
+            power: null,
+            computer2played: false,
+            computer3played: false,
+            computer4played: false,
             cambio: false,
             automaticCambio: false,
-            [cambioCaller]: cambioCallerCards
+            firstTime: true
           })),
         4000
       );
     });
-
-    alert(`GameOver: ${winners} win(s) with ${winningPoints} points!`);
+    winners[0] === "You"
+      ? alert(`Congratulations! You win with ${winningPoints} points!`)
+      : alert(`GameOver: ${winners} wins with ${winningPoints} points!`);
   };
 
   computerHit = () => {
@@ -710,7 +770,7 @@ class App extends React.Component {
               [player]: cards,
               selectedCardA: null
             }));
-          }, 2000);
+          }, 4000);
         }
       }
     }
@@ -743,12 +803,10 @@ class App extends React.Component {
   blindSwap = (event, card, position) => {
     console.log("in blind swap");
     if (!this.state.selectedCardA || !this.state.selectedCardB) {
-      if (event.target.className !== "Selected") {
-        if (!this.state.selectedCardA) {
-          event.target.className = "Selected";
-          console.log("clicked");
-          this.setState({ selectedCardA: { [position]: card } });
-        }
+      if (!this.state.selectedCardA) {
+        event.target.className = "Selected";
+        console.log("clicked");
+        this.setState({ selectedCardA: { [position]: card } });
       } else if (this.state.selectedCardA && !this.state.selectedCardB) {
         event.target.className = "Selected";
         Promise.resolve(
@@ -888,7 +946,6 @@ class App extends React.Component {
         if (!p1Cards.includes(position)) {
           let player = position.slice(0, 2);
           let playerCards = { ...this.state[player] };
-          delete playerCards[card];
           fetch(
             `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
           );
@@ -897,11 +954,13 @@ class App extends React.Component {
             cards: Object.assign(prevState.cards, { [position]: null }),
             topDiscard: card,
             selectedCardA: null,
-            [player]: playerCards,
+            [player]: Object.assign(prevState[player], {
+              [position]: { front: false }
+            }),
             swipedCard: position,
             power: "swipedCard"
           }));
-          alert("Select which card you want to replaced it with");
+          alert("Select which card you want to replaced it with!");
         } else {
           fetch(
             `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/pile/discard/add/?cards=${card.code}`
@@ -964,7 +1023,7 @@ class App extends React.Component {
               [position]: { ...card, front: false }
             })
           }));
-        }, 4000);
+        }, 1000);
       });
     }
   };
@@ -1191,67 +1250,181 @@ class App extends React.Component {
       firstTime: false
     }));
   };
+  rules = () => {
+    const handleClose = () => this.setState({ rules: false });
+    // const handleShow = () => this.setState({ rules: true });
+
+    return (
+      <>
+        <Modal
+          show={this.state.rules}
+          onHide={handleClose}
+          animation={true}
+          size="lg"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Welcome to Cambio!</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <ul>
+              <li>The object of the game is to get the fewest points.</li>
+              <li>
+                Jokers are worth -1 points. Ace is worth 1 point. Red kings are
+                worth zero points. Other face cards are worth 10. And all other
+                cards are face value.
+              </li>
+              <li>
+                Memorize Your first two cards and their positions before you
+                draw.
+              </li>
+              <li>
+                You are player one. Draw one card from the deck when Player 1 is
+                red.
+              </li>
+              <li>
+                Decide where you want to put the card. Either replace one card
+                in your hand or discard it onto the discard pile.
+              </li>
+              <li>
+                You can draw from the discard pile and replace a card in your
+                hand.
+              </li>
+              <li>
+                You can a play card of matching value to the discarded card as
+                long as one hasn't been played on top of it already.
+                <li>
+                  You can play another player's card and then you must give them
+                  one of yours.
+                </li>
+              </li>
+              <li>
+                If you draw a card that is 7 or higher (except red king) there
+                is a power. [IMPORTANT]{" "}
+                <b>Only if you play it on the discard pile.</b>
+              </li>
+              <u>Powers</u>
+              <ul>
+                <li>7 or 8, look at self.</li>
+                <li>9 or 10, look at another player's card.</li>
+                <li>
+                  Jack or Queen, swap two cards on the field without looking at
+                  them.
+                </li>
+                <li>
+                  Black king, look at another player's card and swap it with any
+                  other card.
+                </li>
+              </ul>
+              <li>
+                Once you play a card with a power you must use the power before
+                the game proceeds.
+              </li>
+            </ul>
+            <div style={{ height: "200%", width: "200%" }}>
+              <img src={cambio} />{" "}
+            </div>
+          </Modal.Body>
+        </Modal>
+      </>
+    );
+  };
+
   render() {
     return (
-      <div className="app">
-        {(this.state.cards.p1a ||
-          this.state.cards.p1b ||
-          this.state.cards.p1c ||
-          this.state.cards.p1d) &&
-        this.state.currentTurn === 1 &&
-        !this.state.deckCard &&
-        !this.state.cambio &&
-        this.countPoints({
-          p1a: this.state.cards.p1a,
-          p1b: this.state.cards.p1b,
-          p1c: this.state.cards.p1c,
-          p1d: this.state.cards.p1d
-        }) < 5 ? (
-          <button onClick={() => this.callCambio()}>Cambio?</button>
+      <>
+        <div className="app">
+          {(this.state.cards.p1a ||
+            this.state.cards.p1b ||
+            this.state.cards.p1c ||
+            this.state.cards.p1d) &&
+          this.state.currentTurn === 1 &&
+          !this.state.deckCard &&
+          !this.state.cambio &&
+          this.countPoints({
+            p1a: this.state.cards.p1a,
+            p1b: this.state.cards.p1b,
+            p1c: this.state.cards.p1c,
+            p1d: this.state.cards.p1d
+          }) < 5 ? (
+            <button class="btn btn-info" onClick={() => this.callCambio()}>
+              Cambio?
+            </button>
+          ) : null}
+          {!this.state.playing ? (
+            <div id="intro">
+              <h1 id="cambio">Cambio!</h1> <br></br>
+              <br></br>
+              <div id="play">
+                <button class="btn btn-info" onClick={this.play}>
+                  Play
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {this.state.playing ? this.renderCards() : null}
+          <TurnLabel
+            turn={this.state.currentTurn}
+            playing={this.state.playing}
+          />
+
+          <Computer
+            showCards={this.showCards}
+            hideCards={this.hideCards}
+            computerPlay={this.computerPlay}
+            turn={this.state.currentTurn}
+            computer2played={this.state.computer2played}
+            computer3played={this.state.computer3played}
+            computer4played={this.state.computer4played}
+            deckCard={this.state.deckCard}
+            resetPlay={this.resetPlay}
+            computerHit={this.computerHit}
+            secondCard={this.state.secondCard}
+            topDiscard={this.state.topDiscard}
+            p1Cambio={this.state.p1["last"]}
+            gameOver={this.gameOver}
+            setLast={this.setLast}
+            automaticCambio={this.state.automaticCambio}
+            cards={this.state.cards}
+            automaticCambioFunction={this.automaticCambio}
+            skipTurn={this.skipTurn}
+            cambio={this.state.cambio}
+            playing={this.state.playing}
+            firstTime={this.state.firstTime}
+            secondCard={this.state.secondCard}
+          />
+          {this.state.playing ? (
+            <Deck
+              cardBack={cardBack}
+              playing={this.state.playing}
+              deckCard={this.state.deckCard}
+              drawDeck={this.drawDeck}
+              joker={joker}
+              remaining={this.state.remaining}
+            />
+          ) : null}
+          <Discard
+            playedCard={this.state.topDiscard}
+            discardCard={this.discardCard}
+            playing={this.state.playing}
+            cardBack={cardBack}
+            joker={joker}
+          />
+        </div>
+        {this.rules()}
+        {this.state.playing ? (
+          <div id="rules">
+            <button
+              className="btn btn-info"
+              onClick={() => {
+                this.setState({ rules: true });
+              }}
+            >
+              Rules
+            </button>
+          </div>
         ) : null}
-        {!this.state.playing ? <button onClick={this.play}>Play</button> : null}
-        {this.state.playing ? this.renderCards() : null}
-        <TurnLabel turn={this.state.currentTurn} playing={this.state.playing} />
-        <Computer
-          showCards={this.showCards}
-          hideCards={this.hideCards}
-          computerPlay={this.computerPlay}
-          turn={this.state.currentTurn}
-          computer2played={this.state.computer2played}
-          computer3played={this.state.computer3played}
-          computer4played={this.state.computer4played}
-          deckCard={this.state.deckCard}
-          resetPlay={this.resetPlay}
-          computerHit={this.computerHit}
-          secondCard={this.state.secondCard}
-          topDiscard={this.state.topDiscard}
-          p1Cambio={this.state.p1["last"]}
-          gameOver={this.gameOver}
-          setLast={this.setLast}
-          automaticCambio={this.state.automaticCambio}
-          cards={this.state.cards}
-          automaticCambioFunction={this.automaticCambio}
-          skipTurn={this.skipTurn}
-          cambio={this.state.cambio}
-          playing={this.state.playing}
-          firstTime={this.state.firstTime}
-        />
-        <Deck
-          cardBack={cardBack}
-          playing={this.state.playing}
-          deckCard={this.state.deckCard}
-          drawDeck={this.drawDeck}
-          joker={joker}
-          remaining={this.state.remaining}
-        />
-        <Discard
-          playedCard={this.state.topDiscard}
-          discardCard={this.discardCard}
-          playing={this.state.playing}
-          cardBack={cardBack}
-          joker={joker}
-        />
-      </div>
+      </>
     );
   }
 }
