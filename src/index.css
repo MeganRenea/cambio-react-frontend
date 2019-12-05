@@ -16,17 +16,19 @@ code {
 .app {
   display: grid;
   position: fixed;
-  background: url("./dark-wood-table-texture-datenlaborinfo-table-dark-wood-flooring-l-53f137ea81e16a85.jpg");
+  /* background: url("./dark-wood-table-texture-datenlaborinfo-table-dark-wood-flooring-l-53f137ea81e16a85.jpg"); */
   background-size: cover;
+  background-color: black;
 
   grid-template-columns: repeat(
-    10,
+    11,
     1fr,
     1fr,
     1fr,
     1fr,
-    0.25fr,
-    0.25fr,
+    1fr,
+    1fr,
+    1fr,
     1fr,
     1fr,
     1fr,
@@ -52,6 +54,16 @@ code {
     ". . . . . . . . . . ."
     ". . . . p1b . p1a . . . ."
     ". ru . . p1 p1 p1 . . . . ";
+}
+
+.textContainer {
+  position: relative;
+  width: 400px;
+  height: 200px;
+  /* border: 1px solid white; */
+  top: 70px;
+  right: -65%;
+  overflow: auto;
 }
 
 #cambio {

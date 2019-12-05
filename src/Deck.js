@@ -6,11 +6,20 @@ export default class Deck extends React.Component {
     return (
       <div id="deck">
         <img
-          onClick={this.props.playing ? () => this.props.drawDeck() : null}
+          className={
+            this.props.deckCard && this.props.deckCard.deckSelect
+              ? "Selected"
+              : "Not"
+          }
+          onClick={() => this.props.drawDeck()}
           src={
-            this.props.deckCard && this.props.deckCard.value !== "JOKER"
+            this.props.deckCard &&
+            this.props.deckCard.deckfront &&
+            this.props.deckCard.value !== "JOKER"
               ? this.props.deckCard.image
-              : this.props.deckCard && this.props.deckCard.value === "JOKER"
+              : this.props.deckCard &&
+                this.props.deckCard.deckfront &&
+                this.props.deckCard.value === "JOKER"
               ? this.props.joker
               : deckBack
           }

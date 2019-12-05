@@ -10,7 +10,11 @@ import TurnLabel from "./TurnLabel";
 import Computer from "./Computer";
 import { Modal, Button } from "react-bootstrap";
 import cambio from "./cambio.gif";
-
+let MESSAGE = (
+  <div>
+    Hello from Megan.<br></br> I reccommend you read the rules before playing
+  </div>
+);
 class App extends React.Component {
   state = {
     rules: false,
@@ -78,14 +82,19 @@ class App extends React.Component {
   turn = false;
 
   drawDeck = () => {
-    if (this.state.currentTurn === 1) {
+    if (this.state.currentTurn === 1 && !this.state.deckCard) {
       fetch(
         `https://deckofcardsapi.com/api/deck/${this.state.deck_id}/draw/?count=1`
       )
         .then(resp => resp.json())
         .then(json =>
-          this.setState({ deckCard: json.cards[0], secondCard: false })
+          this.setState({
+            deckCard: { ...json.cards[0], deckfront: true },
+            secondCard: false
+          })
         );
+      MESSAGE =
+        "Click the card you want to swap with the drawn card. Or click the discard pile to play it.";
     }
   };
 
@@ -134,6 +143,7 @@ class App extends React.Component {
     let computer;
     let played;
     let handPoints;
+    let player;
     let nextTurn = this.state.currentTurn + 1;
     if (nextTurn > 4) {
       nextTurn = 1;
@@ -143,15 +153,19 @@ class App extends React.Component {
       computerKnows = this.state.p2;
       computer = "p2";
       played = "computer2played";
+      player = "Player 2";
     } else if (this.state.currentTurn === 3) {
       computerKnows = this.state.p3;
       computer = "p3";
       played = "computer3played";
+      player = "Player 3";
     } else if (this.state.currentTurn === 4) {
       computerKnows = this.state.p4;
       computer = "p4";
       played = "computer4played";
+      player = "Player 4";
     }
+    MESSAGE = null;
     let computerHandPositions = [
       `${computer}a`,
       `${computer}b`,
@@ -191,7 +205,7 @@ class App extends React.Component {
       handPoints < 5 &&
       !this.state.cambio
     ) {
-      alert(`${computer} says CAMBIO`);
+      alert(`${computer} calls CAMBIO`);
       this.setState({
         currentTurn: nextTurn,
         [computer]: Object.assign(this.state[computer], { last: true }),
@@ -210,7 +224,7 @@ class App extends React.Component {
             .then(json => {
               console.log(`${computer} is drawing`);
               this.setState({
-                deckCard: json.cards[0],
+                deckCard: { ...json.cards[0], deckSelect: true },
                 secondCard: false,
                 remaining: json.remaining
               });
@@ -253,7 +267,7 @@ class App extends React.Component {
             .then(json => {
               console.log(`${computer} is drawing`);
               this.setState({
-                deckCard: json.cards[0],
+                deckCard: { ...json.cards[0], deckSelect: true },
                 secondCard: false,
                 remaining: json.remaining
               });
@@ -703,12 +717,12 @@ class App extends React.Component {
             automaticCambio: false,
             firstTime: true
           })),
-        4000
+        6000
       );
     });
     winners[0] === "You"
-      ? alert(`Congratulations! You win with ${winningPoints} points!`)
-      : alert(`GameOver: ${winners} wins with ${winningPoints} points!`);
+      ? (MESSAGE = `Congratulations! You win with ${winningPoints} points!`)
+      : (MESSAGE = `GameOver: ${winners} wins with ${winningPoints} points!`);
   };
 
   computerHit = () => {
@@ -1075,21 +1089,25 @@ class App extends React.Component {
         this.state.deckCard.code === "KC"
       ) {
         this.setState({ power: "lookSwap" });
+        MESSAGE = "Click a card to look at it and another to swap it.";
       } else if (
         this.state.deckCard.value === "QUEEN" ||
         this.state.deckCard.value === "JACK"
       ) {
         this.setState({ power: "blindSwap" });
+        MESSAGE = "Click two cards to swap them.";
       } else if (
         this.state.deckCard.value === "8" ||
         this.state.deckCard.value === "7"
       ) {
         this.setState({ power: "lookSelf" });
+        MESSAGE = "Click one of your cards to look at it.";
       } else if (
         this.state.deckCard.value === "9" ||
         this.state.deckCard.value === "10"
       ) {
         this.setState({ power: "lookOther" });
+        MESSAGE = "Click an opponents card to look at it.";
       } else {
         this.setState({ power: null, currentTurn: turn });
       }
@@ -1112,7 +1130,7 @@ class App extends React.Component {
         ),
         this.setState({ selectedCardA: card, power: "discardTrade" })
       ]).then(() => {
-        alert("Select one of your cards to trade with discarded card.");
+        MESSAGE = "Select one of your cards to trade with discarded card.";
         console.log(this.selectedCardA);
       });
     }
@@ -1223,7 +1241,7 @@ class App extends React.Component {
       cambio: true,
       cambioCaller: "p1"
     });
-    alert("Player 1 calls cambio");
+    alert("Player 1 calls CAMBIO");
   };
 
   skipTurn = () => {
@@ -1252,6 +1270,9 @@ class App extends React.Component {
   };
   rules = () => {
     const handleClose = () => this.setState({ rules: false });
+    if (this.state.rules) {
+      MESSAGE = "Now that you're caught up. Click the deck to draw.";
+    }
     // const handleShow = () => this.setState({ rules: true });
 
     return (
@@ -1318,6 +1339,14 @@ class App extends React.Component {
               <li>
                 Once you play a card with a power you must use the power before
                 the game proceeds.
+              </li>
+              <li>
+                When your hand points are less than 5 you can call cambio and
+                press a button when it's your turn.
+              </li>
+              <li>
+                If someone's hand is entirely empty the game goes around once
+                more and then tallies the points.
               </li>
             </ul>
             <div style={{ height: "200%", width: "200%" }}>
@@ -1422,6 +1451,11 @@ class App extends React.Component {
             >
               Rules
             </button>
+          </div>
+        ) : null}
+        {this.state.playing ? (
+          <div className="textContainer">
+            <h2>{MESSAGE}</h2>
           </div>
         ) : null}
       </>
