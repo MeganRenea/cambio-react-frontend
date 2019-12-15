@@ -721,8 +721,8 @@ class App extends React.Component {
       );
     });
     winners[0] === "You"
-      ? (MESSAGE = `Congratulations! You win with ${winningPoints} points!`)
-      : (MESSAGE = `GameOver: ${winners} wins with ${winningPoints} points!`);
+      ? alert(`Congratulations! You win with ${winningPoints} points!`)
+      : alert(`GameOver: ${winners} wins with ${winningPoints} points!`);
   };
 
   computerHit = () => {
@@ -743,7 +743,7 @@ class App extends React.Component {
       });
     }
 
-    if (this.state.topDiscard && !this.state.secondCard) {
+    if (this.state.topDiscard && !this.state.secondCard && !this.state.d) {
       let matchingCardArray = computerKnows.map(computer => {
         if (computer) {
           let cards = Object.values(computer)[0];
@@ -927,7 +927,6 @@ class App extends React.Component {
     let noCards = p1Cards
       .map(position => this.state.cards[position])
       .every(card => card === null);
-    console.log("p1 no cards?", noCards);
     if (noCards && !this.state.cambio) {
       this.automaticCambio("p1");
     } else if (noCards && this.state.cambio) {
